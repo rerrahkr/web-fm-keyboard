@@ -1,0 +1,3 @@
+[submodule "synth/lib/ymfm"]
+	path = synth/lib/ymfm
+	url = https://github.com/aaronsgiles/ymfm.git
