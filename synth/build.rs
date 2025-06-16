@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 fn main() {
-    cxx_build::bridge("src/lib.rs")
+    cxx_build::bridge("src/ymfm_bridge.rs")
         .file("src/ymfm_bridge/ymfm_bridge.cpp")
         .file("lib/ymfm/src/ymfm_opn.cpp")
         .file("lib/ymfm/src/ymfm_adpcm.cpp")
