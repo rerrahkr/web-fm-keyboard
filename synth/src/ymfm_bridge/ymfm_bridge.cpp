@@ -60,6 +60,9 @@ std::uint32_t ym2608_sample_rate() {
   return ym2608->sample_rate(kYm2608Clock);
 }
 
+std::uint32_t ym2608_clock() {
+  return kYm2608Clock;
+}
 
 std::uint8_t ym2608_read_low(std::uint8_t addr) {
   LockGuardMutex guard{ym2608_mutex};

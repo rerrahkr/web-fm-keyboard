@@ -35,6 +35,12 @@ struct TwoChannelBuffer;
   std::uint32_t ym2608_sample_rate();
 
   /**
+   * @brief Get clock.
+   * @return The clock of YM2608 chip.
+   */
+  std::uint32_t ym2608_clock();
+
+  /**
    * @brief Read data from the YM2608 in A1 = 0 mode.
    * @param[in] addr the register address.
    * @return The data read from the specified register.

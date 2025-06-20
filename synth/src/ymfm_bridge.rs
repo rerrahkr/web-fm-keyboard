@@ -18,6 +18,7 @@ pub(crate) mod ffi {
         fn ym2608_destroy() -> bool;
         fn ym2608_reset();
         fn ym2608_sample_rate() -> u32;
+        fn ym2608_clock() -> u32;
         fn ym2608_read_low(addr: u8) -> u8;
         fn ym2608_read_high(addr: u8) -> u8;
         fn ym2608_write_low(addr: u8, data: u8);
