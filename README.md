@@ -6,9 +6,9 @@ A tiny experimental project to use [ymfm](https://github.com/aaronsgiles/ymfm) a
 
 ## License
 
-[LGPL v2.1 or Later](/LICENSE)
+[MIT License](./LICENSE)
 
 Libraries:
 
 - [ymfm](https://github.com/aaronsgiles/ymfm) (c) 2021, Aaron Giles: [BSD 3-Clause License](https://github.com/aaronsgiles/ymfm/blob/main/LICENSE)
-- [blip_buf-rs](https://github.com/nomyfan/blip_buf-rs) (c) 2024, nomyfan: [LGPL v2.1 or Later](https://github.com/nomyfan/blip_buf-rs/blob/main/LICENSE)
+- [blip_buf](https://mvdnes.github.io/rust-docs/blip_buf-rs/blip_buf/index.html) (c) 2024, nomyfan: [MIT License](https://github.com/mvdnes/blip_buf-rs/blob/main/LICENSE)
