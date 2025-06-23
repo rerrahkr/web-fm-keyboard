@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+blip_buf = "0.1.5"
 cxx = "1.0"
 
 [build-dependencies]

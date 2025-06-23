@@ -6,7 +6,7 @@
 #include <memory>
 #include <mutex>
 
-#include "synth/src/lib.rs.h"
+#include "synth/src/ymfm_bridge.rs.h"
 
 namespace {
 
@@ -16,7 +16,7 @@ using LockGuardMutex = std::lock_guard<std::mutex>;
 
 std::unique_ptr<ymfm::ym2608> ym2608;
 std::mutex ym2608_mutex;
-constexpr std::uint32_t kYm2608Clock{3993600 * 2};
+constexpr std::uint32_t kYm2608Clock{3'993'600 * 2};
 }
 
 bool ym2608_create() {
@@ -46,8 +46,10 @@ bool ym2608_destroy() {
 
 void ym2608_reset() {
   LockGuardMutex guard{ym2608_mutex};
-  
-  ym2608->reset();
+
+  if (ym2608) {
+    ym2608->reset();
+  }
 }
 
 std::uint32_t ym2608_sample_rate() {
@@ -120,7 +122,6 @@ void ym2608_generate(TwoChannelBuffer& buffer, std::uint32_t num_samples) {
     ym2608->generate(&output_data);
 
     // Raise the volume.
-    buffer.left[i] = output_data.data[0] << 1;
-    buffer.right[i] = output_data.data[1] << 1;
+    buffer.push(output_data.data[0] << 1, output_data.data[1] << 1);
   }
 }
