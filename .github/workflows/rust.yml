@@ -1,0 +1,54 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "synth/**"
+      - "!*.md"
+      - "!*.gitignore"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "synth/**"
+      - "!*.md"
+      - "!*.gitignore"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: synth
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Extract Rust version from .prototools
+        id: rust-version
+        run: echo "version=$(grep '^rust' ../.prototools | awk -F'"' '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Setup Rustup
+        run: rustup default ${{ steps.rust-version.outputs.version }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose -- --test-threads=1
