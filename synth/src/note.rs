@@ -38,18 +38,18 @@ impl Note {
 
     pub(crate) fn to_f_number(&self) -> u16 {
         match self {
-            Note::C(_) => 0x016d,
-            Note::Cs(_) => 0x0183,
-            Note::D(_) => 0x0199,
-            Note::Eb(_) => 0x01b1,
-            Note::E(_) => 0x01cc,
-            Note::F(_) => 0x01e8,
-            Note::Fs(_) => 0x0205,
-            Note::G(_) => 0x0223,
-            Note::Gs(_) => 0x0243,
-            Note::A(_) => 0x0266,
-            Note::Bb(_) => 0x028a,
-            Note::B(_) => 0x02b1,
+            Note::C(_) => 0x0266,
+            Note::Cs(_) => 0x028b,
+            Note::D(_) => 0x02b2,
+            Note::Eb(_) => 0x02db,
+            Note::E(_) => 0x0307,
+            Note::F(_) => 0x0334,
+            Note::Fs(_) => 0x0365,
+            Note::G(_) => 0x0398,
+            Note::Gs(_) => 0x03ce,
+            Note::A(_) => 0x0406,
+            Note::Bb(_) => 0x0442,
+            Note::B(_) => 0x0480,
         }
     }
 
@@ -95,10 +95,10 @@ mod tests {
 
     #[test]
     fn test_note_to_f_number_block() {
-        assert_eq!(Note::C(0).to_f_number_low(), 0x6d);
-        assert_eq!(Note::C(0).to_f_number_high_block(), 0x01);
+        assert_eq!(Note::C(0).to_f_number_low(), 0x66);
+        assert_eq!(Note::C(0).to_f_number_high_block(), 0x02);
 
-        assert_eq!(Note::Bb(5).to_f_number_low(), 0x8a);
-        assert_eq!(Note::Bb(5).to_f_number_high_block(), 0x2a);
+        assert_eq!(Note::Bb(5).to_f_number_low(), 0x42);
+        assert_eq!(Note::Bb(5).to_f_number_high_block(), 0x2c);
     }
 }
