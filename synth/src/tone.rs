@@ -41,7 +41,7 @@ pub struct FmOperator {
 
 impl FmOperator {
     pub(crate) fn value_dt_ml(&self) -> u8 {
-        (self.dt & 0x7) << 4 | (self.ml & 0x8)
+        (self.dt & 0x07) << 4 | (self.ml & 0x0f)
     }
     pub(crate) fn value_ks_ar(&self) -> u8 {
         (self.ks & 0x3) << 6 | (self.ar & 0x1f)
@@ -52,7 +52,7 @@ impl FmOperator {
     }
 
     pub(crate) fn value_sl_rr(&self) -> u8 {
-        (self.sl & 0x7) << 4 | (self.rr & 0x7)
+        (self.sl & 0x0f) << 4 | (self.rr & 0x0f)
     }
 
     pub(crate) fn value_sr(&self) -> u8 {
@@ -60,7 +60,7 @@ impl FmOperator {
     }
 
     pub(crate) fn value_ssg_eg(&self) -> u8 {
-        self.ssg_eg & 0xf
+        self.ssg_eg & 0x0f
     }
 
     pub(crate) fn value_tl(&self) -> u8 {

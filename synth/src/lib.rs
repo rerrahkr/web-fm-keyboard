@@ -54,7 +54,7 @@ pub fn set_tone(tone: &FmTone) {
         ym2608_write_high_and_low(0xb4 + ch_offset, CENTER_PANNING | tone.value_ams_pms());
     }
 
-    const OP_OFFSET: [u8; 4] = [0x00, 0x04, 0x08, 0x0c];
+    const OP_OFFSET: [u8; 4] = [0x00, 0x08, 0x04, 0x0c];
     for (op, op_offset) in tone.op.iter().zip(OP_OFFSET.iter()) {
         for ch_offset in 0..=2 {
             ym2608_write_high_and_low(0x30 + ch_offset + op_offset, op.value_dt_ml());
@@ -86,10 +86,10 @@ pub fn note_on(ch: u8, note: Note) {
 
 pub fn note_off(ch: u8) {
     if ch < 3 {
-        ym2608_write_low(0x28, !SLOT_FLAGS | ch);
+        ym2608_write_low(0x28, !SLOT_FLAGS & ch);
     } else if ch < 6 {
         let high_ch = ch - 2;
-        ym2608_write_low(0x28, !SLOT_FLAGS | HIGH_CH_NOTE_ON_FLAG | high_ch);
+        ym2608_write_low(0x28, !SLOT_FLAGS & (HIGH_CH_NOTE_ON_FLAG | high_ch));
     }
 }
 
