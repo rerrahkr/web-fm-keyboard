@@ -1,7 +1,26 @@
 // SPDX-FileCopyrightText: 2025 Rerrah
 // SPDX-License-Identifier: MIT
 
+extern crate hound;
+
+use std::{fs::File, io::BufWriter};
 use synth::*;
+
+fn stream(writer: &mut hound::WavWriter<BufWriter<File>>, length: usize) {
+    const BUF_SIZE: usize = 0x10000;
+    let (mut left, mut right) = ([0; BUF_SIZE], [0; BUF_SIZE]);
+
+    const BLOCK: usize = 2000;
+
+    for _ in 0..length {
+        generate(left.as_mut_ptr(), right.as_mut_ptr(), BLOCK);
+
+        for i in 0..BLOCK {
+            writer.write_sample(left[i]).unwrap();
+            writer.write_sample(right[i]).unwrap();
+        }
+    }
+}
 
 fn main() {
     let tone = FmTone {
@@ -66,12 +85,32 @@ fn main() {
         pms: 0,
     };
 
-    // create();
+    const SAMPLE_RATE: u32 = 44_100;
+
+    let spec = hound::WavSpec {
+        channels: 2,
+        sample_rate: SAMPLE_RATE,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+
+    let mut wav_writer = hound::WavWriter::create("sound.wav", spec).unwrap();
+
+    create(SAMPLE_RATE as f64);
+
+    stream(&mut wav_writer, 20);
 
     set_tone(&tone);
 
-    note_on(0, Note::C(4));
+    note_on(0, Note::C(3));
+
+    stream(&mut wav_writer, 50);
+
     note_off(0);
 
+    stream(&mut wav_writer, 20);
+
     destroy();
+
+    wav_writer.finalize().unwrap();
 }
