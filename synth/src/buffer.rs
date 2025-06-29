@@ -1,7 +1,5 @@
 use std::slice;
 
-extern crate blip_buf;
-
 struct ChannelBuffer {
     buf: blip_buf::BlipBuf,
     prev_sample: i32,

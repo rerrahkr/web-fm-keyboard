@@ -4,14 +4,14 @@
 mod buffer;
 mod note;
 mod tone;
-
 mod ymfm_bridge;
 
 pub use note::*;
 pub use tone::*;
 
-use buffer::TwoChannelBuffer;
 use std::sync::Mutex;
+
+use buffer::TwoChannelBuffer;
 use ymfm_bridge::ffi::*;
 
 static RESAMPLED_BUF: Mutex<Option<TwoChannelBuffer>> = Mutex::new(None);
