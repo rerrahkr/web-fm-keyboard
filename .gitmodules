@@ -1,3 +1,9 @@
 [submodule "synth/lib/ymfm"]
 	path = synth/lib/ymfm
 	url = https://github.com/aaronsgiles/ymfm.git
+[submodule "synth_em/lib/miniaudio"]
+	path = synth_em/lib/miniaudio
+	url = https://github.com/mackron/miniaudio.git
+[submodule "synth_em/lib/ymfm"]
+	path = synth_em/lib/ymfm
+	url = https://github.com/aaronsgiles/ymfm.git
