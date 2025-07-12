@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome lint --apply /src",
-    "format": "biome format --write ./src",
-    "check": "biome check --apply /src"
+    "lint": "biome lint",
+    "format": "biome format --write",
+    "check": "biome check"
   },
   "dependencies": {
     "next": "15.3.5",

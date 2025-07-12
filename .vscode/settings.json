@@ -50,5 +50,16 @@
         "typeinfo": "cpp",
         "variant": "cpp"
     },
-    "C_Cpp.default.cppStandard": "c++20"
+    "C_Cpp.default.cppStandard": "c++20",
+    "biome.lsp.bin": "web/node_modules/.bin/biome",
+    "biome.requireConfiguration": true,
+    "biome.configurationPath": "${workspaceFolder}/web/biome.json",
+    "[typescript][typescriptreact]": {
+        // "editor.formatOnSave": true,
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.biome": "explicit",
+            "source.organizeImports.biome": "explicit"
+        }
+    }
 }
