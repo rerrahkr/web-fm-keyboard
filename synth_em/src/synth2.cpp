@@ -16,7 +16,7 @@
 #include "chip/ym2608.hpp"
 #include "instrument.hpp"
 #include "keyboard.hpp"
-#include "lib/miniaudio/miniaudio.h"
+#include "miniaudio.h"
 
 namespace {
 // Chip instance.
@@ -24,7 +24,7 @@ using VariantChip = std::variant<synth::chip::Ym2608>;
 VariantChip chip_instance;
 
 // Temporary buffer.
-constexpr std::usize_t kInitialBufferSize{0x10000};
+constexpr std::size_t kInitialBufferSize{0x10000};
 std::vector<float> tmp_buffer[2] = {
     std::vector<float>(kInitialBufferSize, 0.f),
     std::vector<float>(kInitialBufferSize, 0.f),
@@ -50,7 +50,7 @@ struct NoteOffCommand {
 
 struct SetInstrumentCommand {
   synth::FmInstrument instrument;
-}
+};
 
 using Command =
     std::variant<NoteOnCommand, NoteOffCommand, SetInstrumentCommand>;
@@ -86,45 +86,6 @@ enum class ChipType {
   Ym2608,
 };
 
-bool Initialize() { return ChangeChip(ChipType::Ym2608); }
-
-bool Deinitialize() {
-  std::lock_guard<std::mutex> lock(chip_output_mutex);
-
-  ma_resampler_uninit(&left_resampler, nullptr);
-  ma_resampler_uninit(&right_resampler, nullptr);
-}
-
-void Reset() {
-  std::visit([](auto& chip) { chip.Reset(); }, chip_instance);
-}
-
-bool SwitchChip(ChipType type, std::uint32_t rate) {
-  std::lock_guard<std::mutex> in_lock(chip_input_mutex);
-  std::lock_guard<std::mutex> out_lock(chip_output_mutex);
-
-  switch (type) {
-    case ChipType::Ym2608:
-      if (!std::holds_alternative<synth::chip::Ym2608>(chip_instance)) {
-        chip_instance = synth::chip::Ym2608();
-      }
-      break;
-
-    default:
-      // Unsupported chip type.
-      return false;
-  }
-
-  // Reset note-on memory.
-  const auto num_channels = std::visit(
-      [](const auto& chip) { return chip.num_channels(); }, chip_instance);
-  keyboard = Keyboard(num_channels);
-
-  return SetSamplingRate(rate);
-}
-
-bool ChangeChip(ChipType type) { return SwitchChip(type, sampling_rate); }
-
 bool SetSamplingRate(std::uint32_t rate) {
   std::lock_guard<std::mutex> in_lock(chip_input_mutex);
   std::lock_guard<std::mutex> out_lock(chip_output_mutex);
@@ -143,7 +104,49 @@ bool SetSamplingRate(std::uint32_t rate) {
     return false;
   }
 
+  sampling_rate = rate;
   return true;
+}
+
+bool SwitchChip(ChipType type, std::uint32_t rate) {
+  std::lock_guard<std::mutex> in_lock(chip_input_mutex);
+  std::lock_guard<std::mutex> out_lock(chip_output_mutex);
+
+  switch (type) {
+    case ChipType::Ym2608:
+      if (!std::holds_alternative<synth::chip::Ym2608>(chip_instance)) {
+        chip_instance.emplace<synth::chip::Ym2608>();
+      }
+      break;
+
+    default:
+      // Unsupported chip type.
+      return false;
+  }
+
+  // Reset note-on memory.
+  const auto num_channels = std::visit(
+      [](const auto& chip) { return chip.num_channels(); }, chip_instance);
+  keyboard = Keyboard(num_channels);
+
+  return SetSamplingRate(rate);
+}
+
+bool ChangeChip(ChipType type) { return SwitchChip(type, sampling_rate); }
+
+bool Initialize() { return ChangeChip(ChipType::Ym2608); }
+
+bool Deinitialize() {
+  std::lock_guard<std::mutex> lock(chip_output_mutex);
+
+  ma_resampler_uninit(&left_resampler, nullptr);
+  ma_resampler_uninit(&right_resampler, nullptr);
+
+  return true;
+}
+
+void Reset() {
+  std::visit([](auto& chip) { chip.Reset(); }, chip_instance);
 }
 
 void NoteOn(const Note& note) {
@@ -155,12 +158,12 @@ void NoteOn(const Note& note) {
     return;
   }
 
-  command_memory.push_back(NoteOnCommand{result->first, note});
-
-  if (result->second) {
-    const auto&& [ch, note_off_note] = result->second.value();
-    command_memory.push_back(NoteOnCommand{ch, note_off_note});
+  std::uint8_t ch = result->first;
+  if (const auto note_off_note = result->second) {
+    command_memory.push_back(NoteOffCommand{ch, note_off_note.value()});
   }
+
+  command_memory.push_back(NoteOnCommand{ch, note});
 }
 
 void NoteOff(const Note& note) {
@@ -180,7 +183,7 @@ void SetInstrument(const FmInstrument& instrument) {
 }
 
 void Generate(emscripten::val left_buffer, emscripten::val right_buffer,
-              std::uint64_t num_samples) {
+              std::uint32_t num_samples) {
   {
     std::lock_guard<std::mutex> lock(chip_input_mutex);
 
@@ -194,17 +197,15 @@ void Generate(emscripten::val left_buffer, emscripten::val right_buffer,
     std::lock_guard<std::mutex> lock(chip_output_mutex);
 
     // Convert SharedArrayBuffer to Float32Array views.
-    auto left_view = emscripten::val::global("Float32Array").new_(left_buffer);
-    auto right_view =
-        emscripten::val::global("Float32Array").new_(right_buffer);
-    auto* left_ptr =
-        reinterpret_cast<float*>(left_view["buffer"].as<std::uintptr_t>());
-    auto* right_ptr =
-        reinterpret_cast<float*>(right_view["buffer"].as<std::uintptr_t>());
+    float* left_ptr =
+        reinterpret_cast<float*>(left_buffer.as<std::uintptr_t>());
+    float* right_ptr =
+        reinterpret_cast<float*>(right_buffer.as<std::uintptr_t>());
 
     ma_uint64 required_input_samples = 0;
+    ma_uint64 output_samples = static_cast<ma_uint64>(num_samples);
     if (ma_resampler_get_required_input_frame_count(
-            &left_resampler, num_samples, &required_input_samples) !=
+            &left_resampler, output_samples, &required_input_samples) !=
         MA_SUCCESS) {
       return;
     }
@@ -215,24 +216,24 @@ void Generate(emscripten::val left_buffer, emscripten::val right_buffer,
     }
 
     std::visit(
-        [num_samples](auto& chip) {
-          chip.Generate(tmp_buffer[0], tmp_buffer[1],
+        [required_input_samples](auto& chip) {
+          chip.Generate(tmp_buffer[0].data(), tmp_buffer[1].data(),
                         static_cast<std::uint32_t>(required_input_samples));
         },
         chip_instance);
 
-    ma_linear_resampler_process_pcm_frames(
-        &left_resampler, tmp_buffer[0].data(), &required_input_samples,
-        left_ptr, &num_samples);
-    ma_linear_resampler_process_pcm_frames(
-        &right_resampler, tmp_buffer[1].data(), &required_input_samples,
-        right_ptr, &num_samples);
+    ma_resampler_process_pcm_frames(&left_resampler, tmp_buffer[0].data(),
+                                    &required_input_samples, left_ptr,
+                                    &output_samples);
+    ma_resampler_process_pcm_frames(&right_resampler, tmp_buffer[1].data(),
+                                    &required_input_samples, right_ptr,
+                                    &output_samples);
   }
 }
 }  // namespace synth
 
 EMSCRIPTEN_BINDINGS(synth_module) {
-  using synth;
+  using namespace synth;
 
   emscripten::enum_<ChipType>("ChipType").value("Ym2608", ChipType::Ym2608);
 
@@ -254,19 +255,11 @@ EMSCRIPTEN_BINDINGS(synth_module) {
       .field("name", &Note::name)
       .field("octave", &Note::octave);
 
-  emscripten::value_array<std::array<FmOperator, 4>>("fm_operator_array")
+  emscripten::value_array<std::array<FmOperator, 4>>("FmOperatorArray")
       .element(emscripten::index<0>())
       .element(emscripten::index<1>())
       .element(emscripten::index<2>())
       .element(emscripten::index<3>());
-
-  emscripten::value_object<FmInstrument>("FmInstrument")
-      .field("al", &FmInstrument::al)
-      .field("fb", &FmInstrument::fb)
-      .field("op", &FmInstrument::op)
-      .field("lfo_freq", &FmInstrument::lfo_freq)
-      .field("ams", &FmInstrument::ams)
-      .field("pms", &FmInstrument::pms);
 
   emscripten::value_object<FmOperator>("FmOperator")
       .field("ar", &FmOperator::ar)
@@ -280,6 +273,14 @@ EMSCRIPTEN_BINDINGS(synth_module) {
       .field("dt", &FmOperator::dt)
       .field("ssg_eg", &FmOperator::ssg_eg)
       .field("am", &FmOperator::am);
+
+  emscripten::value_object<FmInstrument>("FmInstrument")
+      .field("al", &FmInstrument::al)
+      .field("fb", &FmInstrument::fb)
+      .field("op", &FmInstrument::op)
+      .field("lfo_freq", &FmInstrument::lfo_freq)
+      .field("ams", &FmInstrument::ams)
+      .field("pms", &FmInstrument::pms);
 
   emscripten::function("initialize", &Initialize);
   emscripten::function("deinitialize", &Deinitialize);

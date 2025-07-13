@@ -11,6 +11,14 @@ enum class NoteName : int { C, Cs, D, Eb, E, F, Fs, G, Gs, A, Bb, B };
 struct Note {
   NoteName name;
   std::uint8_t octave;
+
+  bool operator==(const Note& other) const noexcept {
+    return name == other.name && octave == other.octave;
+  }
+
+  bool operator!=(const Note& other) const noexcept {
+    return !(*this == other);
+  }
 };
 }  // namespace synth
 

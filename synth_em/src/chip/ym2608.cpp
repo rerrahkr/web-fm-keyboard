@@ -87,7 +87,8 @@ class Ym2608InstrumentView {
 }  // namespace
 
 namespace synth::chip {
-Ym2608::Ym2608() : chip_(std::make_unique<ymfm::ym2608>(ymfm_common_interface)) {
+Ym2608::Ym2608()
+    : chip_(std::make_unique<ymfm::ym2608>(ymfm_common_interface)) {
   chip_->set_fidelity(ymfm::OPN_FIDELITY_MIN);
 
   chip_->reset();
@@ -144,8 +145,8 @@ void Ym2608::SetInstrument(const FmInstrument& instrument) {
 
   WriteLow(0x24, instrument.lfo_freq);
 
-  static const auto write_low_and_high = [this](std::uint8_t address,
-                                                std::uint8_t data) {
+  const auto write_low_and_high = [this](std::uint8_t address,
+                                         std::uint8_t data) {
     WriteLow(address, data);
     WriteHigh(address, data);
   };
@@ -153,26 +154,28 @@ void Ym2608::SetInstrument(const FmInstrument& instrument) {
   Ym2608InstrumentView inst_view{instrument};
 
   for (std::uint8_t ch_offset = 0; ch_offset < 3; ++ch_offset) {
-    write_low_and_high(0xB0 + ch_offset, inst_view.value_lfo_freq());
+    write_low_and_high(0xB0 + ch_offset, inst_view.value_fb_al());
+    constexpr std::uint8_t kCenterPanning = 0xc0;
+    write_low_and_high(0xB4 + ch_offset,
+                       kCenterPanning | inst_view.value_ams_pms());
 
     static const std::array<std::uint8_t, 4> kOpOffset{0x0, 0x8, 0x4, 0xC};
     for (std::size_t i = 0; i < 4; ++i) {
       std::uint8_t op_offset = kOpOffset.at(i);
       auto op_view = inst_view.operator_view(i);
 
-      for (std::uint8_t ch_offset = 0; ch_offset < 3; ++ch_offset) {
-        const auto write = [offset = op_offset + ch_offset](
-                               std::uint8_t address, std::uint8_t data) {
-          write_low_and_high(address + offset, data);
-        };
-        write(0x30, op_view.value_dt_ml());
-        write(0x40, op_view.value_tl());
-        write(0x50, op_view.value_ks_ar());
-        write(0x60, op_view.value_am_dr());
-        write(0x70, op_view.value_sr());
-        write(0x80, op_view.value_sl_rr());
-        write(0x90, op_view.value_ssg_eg());
-      }
+      const auto write_op = [write_low_and_high, ch_offset, op_offset](
+                                std::uint8_t address, std::uint8_t data) {
+        write_low_and_high(address + ch_offset + op_offset, data);
+      };
+
+      write_op(0x30, op_view.value_dt_ml());
+      write_op(0x40, op_view.value_tl());
+      write_op(0x50, op_view.value_ks_ar());
+      write_op(0x60, op_view.value_am_dr());
+      write_op(0x70, op_view.value_sr());
+      write_op(0x80, op_view.value_sl_rr());
+      write_op(0x90, op_view.value_ssg_eg());
     }
   }
 }

@@ -6,6 +6,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unused-parameter")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+
 # Add source files
 set(YMFM_SRCS
     lib/ymfm/src/ymfm_opn.cpp
@@ -14,7 +17,7 @@ set(YMFM_SRCS
 )
 file(GLOB MINIAUDIO_SRCS lib/miniaudio/*.c)
 
-file(GLOB SRCS src/**/*.cpp)
+file(GLOB_RECURSE SRCS src/*.cpp)
 
 # Create the WASM module
 add_executable(${PROJECT_NAME} ${SRCS} ${YMFM_SRCS} ${MINIAUDIO_SRCS})
@@ -37,7 +40,6 @@ set(EM_FLAGS
 )
 string(REPLACE ";" " " EM_FLAGS "${EM_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${EM_FLAGS}")
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter")
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE lib/ymfm/src)

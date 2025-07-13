@@ -33,9 +33,9 @@ class Keyboard {
       map_.erase(popped.value());
     }
 
-    queue_.push_front(value);
+    queue_.push_front(note);
     std::uint8_t ch = channels_.front();
-    map_[value] = std::make_pair(queue_.begin(), ch);
+    map_[note] = std::make_pair(queue_.begin(), ch);
     channels_.pop_front();
 
     return std::make_pair(ch, std::move(popped));
@@ -48,9 +48,9 @@ class Keyboard {
     }
 
     std::uint8_t ch = it->second.second;
-    queue_.erase(note);
+    queue_.erase(it->second.first);
     channels_.push_back(ch);
-    map_.erase(note);
+    map_.erase(it);
 
     return ch;
   }
