@@ -13,7 +13,6 @@ createSynthModule({
 })
   .then((mod) => {
     module = mod;
-    console.log(mod);
     postCustomMessage({
       type: "WasmIsReady",
       error: false,

@@ -22,7 +22,9 @@ export function SynthWorker(): React.JSX.Element | null {
         switch (message.type) {
           case "WasmIsReady":
             console.log("Wasm module is ready");
-            worker.postMessage({ type: "InitializeSynth" } satisfies SentMessage);
+            worker.postMessage({
+              type: "InitializeSynth",
+            } satisfies SentMessage);
             break;
 
           case "SynthIsInitialized":
@@ -69,7 +71,9 @@ export function SynthWorker(): React.JSX.Element | null {
           };
 
           worker.addEventListener("message", onMessage);
-          worker.postMessage({ type: "DeinitializeSynth" } satisfies SentMessage);
+          worker.postMessage({
+            type: "DeinitializeSynth",
+          } satisfies SentMessage);
         });
       })();
     };
